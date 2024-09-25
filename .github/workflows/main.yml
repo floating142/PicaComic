@@ -1,41 +1,39 @@
-name: Build IOS
-run-name: Build IOS
+name: Flutter Build
+
 on:
-  workflow_dispatch: {}
+  push:
+    branches:
+      - main  # 或其他你想要的分支
+  workflow_dispatch:
+
 jobs:
-  Build_IOS:
-    runs-on: macos-13
+  build:
+    runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v3
-    - uses: subosito/flutter-action@v2
-      with:
-        channel: 'stable'
-        architecture: x64
-    - run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app
-    - run: flutter pub get
-    - run: flutter build ios --release --no-codesign
-    - run: |
-        mkdir -p /Users/runner/work/PicaComic/PicaComic/build/ios/iphoneos/Payload
-        mv /Users/runner/work/PicaComic/PicaComic/build/ios/iphoneos/Runner.app /Users/runner/work/PicaComic/PicaComic/build/ios/iphoneos/Payload
-        cd /Users/runner/work/PicaComic/PicaComic/build/ios/iphoneos/
-        zip -r app-ios.ipa Payload
-    - uses: actions/upload-artifact@v4
-      with:
-        name: app-ios.ipa
-        path: /Users/runner/work/PicaComic/PicaComic/build/ios/iphoneos/app-ios.ipa
-  Build_MacOS:
-    runs-on: macos-13
-    steps:
-    - uses: actions/checkout@v3
-    - uses: subosito/flutter-action@v2
-      with:
-        channel: 'stable'
-        architecture: x64
-    - run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app
-    - run: flutter pub get
-    - run: flutter build macos --release
-    - uses: actions/upload-artifact@v4
-      with:
-        name: macos-build.zip
-        path: build/macos/Build/Products/Release/pica_comic.app
- 
+      - name: Checkout the code
+        uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+
+      - name: Install Flutter
+        run: |
+          git clone https://github.com/flutter/flutter.git /usr/local/flutter
+          echo "/usr/local/flutter/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: |
+          flutter pub get
+
+      - name: Build the app
+        run: |
+          flutter build apk --debug  # 你可以根据需要选择不同的构建模式
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: my-flutter-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk  # 根据你的构建输出路径调整
